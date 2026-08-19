@@ -1,0 +1,3029 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Trade Engine AI — Fullstack Documentation</title>
+    <meta
+      name="description"
+      content="Official fullstack documentation for Trade Engine AI — landing, cockpit, auth, APIs, and deploy."
+    />
+    <link rel="icon" href="/engine-logo.png" />
+    <style>
+      @font-face {
+        font-family: "Inter Var";
+        src: url("/Inter-Variable.woff2") format("woff2");
+        font-weight: 100 900;
+        font-display: swap;
+      }
+
+      :root {
+        --bg: #000000;
+        --bg-panel: rgba(8, 14, 18, 0.72);
+        --fg: #e8eef2;
+        --fg-muted: #8b9aab;
+        --fg-subtle: #5a6b7a;
+        --cyan: #4de8f0;
+        --cyan-soft: #7af0f5;
+        --mint: #5ff5c8;
+        --mint-dim: #2dd4a8;
+        --border: rgba(77, 232, 240, 0.12);
+        --border-strong: rgba(77, 232, 240, 0.28);
+        --glow-cyan: rgba(77, 232, 240, 0.45);
+        --gradient-accent: linear-gradient(135deg, #4de8f0 0%, #5ff5c8 100%);
+        --font: "Inter Var", Inter, "Segoe UI", "Helvetica Neue", sans-serif;
+        --nav-w: 15.5rem;
+        --content: 48rem;
+        --ease: cubic-bezier(0.22, 1, 0.36, 1);
+        --scene-ms: 900ms;
+      }
+
+      * { box-sizing: border-box; }
+
+      html, body {
+        margin: 0;
+        height: 100%;
+        overflow: hidden;
+        font-family: var(--font);
+        color: var(--fg);
+        background: var(--bg);
+        line-height: 1.65;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        z-index: 0;
+        background:
+          radial-gradient(ellipse 80% 50% at 10% -10%, rgba(77, 232, 240, 0.14), transparent 55%),
+          radial-gradient(ellipse 60% 40% at 95% 20%, rgba(95, 245, 200, 0.08), transparent 50%),
+          radial-gradient(ellipse 50% 30% at 50% 100%, rgba(77, 232, 240, 0.06), transparent 60%),
+          linear-gradient(180deg, #000 0%, #03080b 40%, #000 100%);
+      }
+
+      body::after {
+        content: "";
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        z-index: 0;
+        opacity: 0.3;
+        background-image:
+          linear-gradient(rgba(77, 232, 240, 0.03) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(77, 232, 240, 0.03) 1px, transparent 1px);
+        background-size: 64px 64px;
+        mask-image: radial-gradient(ellipse 70% 60% at 50% 30%, #000 20%, transparent 75%);
+      }
+
+      a { color: var(--cyan-soft); text-decoration: none; }
+      a:hover { color: var(--mint); }
+
+      .shell {
+        position: relative;
+        z-index: 1;
+        display: grid;
+        grid-template-columns: var(--nav-w) minmax(0, 1fr);
+        height: 100dvh;
+        height: 100vh;
+      }
+
+      .side {
+        position: relative;
+        z-index: 5;
+        height: 100%;
+        padding: 1.5rem 1.1rem 1.75rem;
+        border-right: 1px solid var(--border);
+        background: rgba(0, 0, 0, 0.62);
+        backdrop-filter: blur(16px);
+        overflow-y: auto;
+      }
+
+      .side-brand {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 0.35rem;
+        text-decoration: none;
+        color: inherit;
+        cursor: pointer;
+      }
+      .side-brand:hover strong {
+        filter: brightness(1.12);
+      }
+      .side-brand img {
+        width: 2.25rem;
+        height: 2.25rem;
+        object-fit: contain;
+        filter: drop-shadow(0 0 12px var(--glow-cyan));
+      }
+      .side-brand strong {
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        background: var(--gradient-accent);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+      }
+      .side-kicker {
+        margin: 0 0 1.5rem;
+        padding-left: 3rem;
+        font-size: 0.68rem;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--fg-subtle);
+      }
+      .side nav {
+        display: flex;
+        flex-direction: column;
+        gap: 0.12rem;
+      }
+      .side nav a {
+        display: block;
+        padding: 0.42rem 0.6rem;
+        font-size: 0.78rem;
+        font-weight: 500;
+        color: var(--fg-muted);
+        border-left: 2px solid transparent;
+        transition: color 0.2s, border-color 0.2s, background 0.2s;
+      }
+      .side nav a:hover,
+      .side nav a.is-active {
+        color: var(--fg);
+        border-left-color: var(--cyan);
+        background: rgba(77, 232, 240, 0.06);
+      }
+      .side nav a.toc-website {
+        margin-bottom: 0.45rem;
+        color: var(--cyan-soft);
+        border-left-color: rgba(77, 232, 240, 0.35);
+        background: rgba(77, 232, 240, 0.05);
+        font-weight: 600;
+      }
+      .side nav a.toc-website:hover {
+        color: var(--mint);
+        border-left-color: var(--cyan);
+        background: rgba(77, 232, 240, 0.1);
+      }
+      .side-foot {
+        margin-top: 1.5rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--border);
+        font-size: 0.68rem;
+        color: var(--fg-subtle);
+        line-height: 1.5;
+      }
+
+      .stage {
+        position: relative;
+        min-width: 0;
+        height: 100%;
+        overflow: hidden;
+        touch-action: none;
+      }
+
+      .scene {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        padding: 0;
+        border: none;
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        transform: translate3d(0, 18%, 0) scale(0.985);
+        filter: blur(6px);
+        transition:
+          opacity var(--scene-ms) var(--ease),
+          transform var(--scene-ms) var(--ease),
+          filter calc(var(--scene-ms) * 0.85) var(--ease),
+          visibility 0s linear var(--scene-ms);
+        will-change: transform, opacity, filter;
+      }
+
+      .scene.is-active {
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
+        transform: translate3d(0, 0, 0) scale(1);
+        filter: blur(0);
+        transition-delay: 0s;
+        z-index: 2;
+      }
+
+      .scene.is-exit-up {
+        opacity: 0;
+        transform: translate3d(0, -14%, 0) scale(0.99);
+        filter: blur(4px);
+        z-index: 1;
+      }
+
+      .scene.is-exit-down {
+        opacity: 0;
+        transform: translate3d(0, 14%, 0) scale(0.99);
+        filter: blur(4px);
+        z-index: 1;
+      }
+
+      .scene.is-enter-from-down {
+        transform: translate3d(0, 18%, 0) scale(0.985);
+      }
+
+      .scene.is-enter-from-up {
+        transform: translate3d(0, -18%, 0) scale(0.985);
+      }
+
+      .scene-scroll {
+        flex: 1;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        overflow-y: auto;
+        overflow-x: hidden;
+        overscroll-behavior: contain;
+        touch-action: pan-y;
+        padding: clamp(1.5rem, 4vh, 2.75rem) clamp(1.25rem, 4vw, 3.25rem) 3rem;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(77, 232, 240, 0.35) transparent;
+      }
+
+      /* Vertically center chapter content; when taller than the viewport, scroll from top */
+      .scene-scroll-inner {
+        width: 100%;
+        max-width: 100%;
+        margin-block: auto;
+        flex: 0 0 auto;
+      }
+
+      /* One-viewport chapters — compact spacing, no need to scroll */
+      .scene--fit .scene-scroll {
+        padding-block: clamp(1rem, 3vh, 1.75rem);
+        overflow-y: hidden;
+      }
+      .scene--fit .lead {
+        margin-bottom: 0.75rem;
+        font-size: 0.98rem;
+      }
+      .scene--fit .stat-row,
+      .scene--fit .grid-3 {
+        margin: 0.75rem 0 0.35rem;
+        gap: 0.6rem;
+      }
+      .scene--fit .stat {
+        padding: 0.7rem 0.65rem;
+      }
+      .scene--fit .stat-value {
+        font-size: 1.1rem;
+      }
+      .scene--fit .card {
+        padding: 0.85rem 0.9rem;
+      }
+      .scene--fit .callout {
+        margin-top: 0.85rem;
+        padding: 0.85rem 1rem;
+      }
+      .scene--fit h2 {
+        margin-bottom: 0.55rem;
+      }
+      .scene--fit .label {
+        margin-bottom: 0.45rem;
+      }
+
+      .scene--hero {
+        justify-content: stretch;
+        align-items: stretch;
+        padding: 0;
+        /* Avoid filter stacking — can hide the logo image in some browsers */
+        filter: none !important;
+      }
+
+      .scene--hero.is-active {
+        filter: none !important;
+      }
+
+      .docs-home {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
+        min-height: 0;
+        padding: 1.25rem 1.25rem max(2.25rem, 6vh);
+        text-align: center;
+        opacity: 1;
+        transform: none;
+        gap: 0.35rem;
+      }
+
+      .docs-home-bg {
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        pointer-events: none;
+        overflow: hidden;
+        will-change: opacity;
+      }
+
+      .docs-home-flash {
+        position: absolute;
+        inset: 0;
+        z-index: 8;
+        pointer-events: none;
+        opacity: 0;
+        mix-blend-mode: screen;
+        background: radial-gradient(
+          circle at 50% 46%,
+          rgba(255, 255, 255, 0.55) 0%,
+          rgba(95, 245, 200, 0.25) 28%,
+          transparent 62%
+        );
+        will-change: opacity;
+      }
+
+      .docs-home-iris {
+        position: absolute;
+        inset: 0;
+        z-index: 9;
+        pointer-events: none;
+        opacity: 0;
+        will-change: opacity, background;
+      }
+
+      .docs-home-bg-base {
+        position: absolute;
+        inset: 0;
+        background: #000;
+      }
+
+      .docs-home-bg-stage {
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(
+          ellipse 75% 55% at 50% 40%,
+          #0c141c 0%,
+          #060a0e 42%,
+          #020304 70%,
+          #000 100%
+        );
+      }
+
+      .docs-home-bg-wash {
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(
+          circle at 50% 40%,
+          rgba(77, 232, 240, 0.11) 0%,
+          rgba(95, 245, 200, 0.05) 32%,
+          transparent 62%
+        );
+      }
+
+      .docs-home-bg-dots {
+        position: absolute;
+        inset: 0;
+        background-image: radial-gradient(
+          rgba(220, 235, 245, 0.14) 0.65px,
+          transparent 0.65px
+        );
+        background-size: 36px 36px;
+        mask-image: radial-gradient(
+          ellipse 70% 60% at 50% 40%,
+          black 15%,
+          transparent 78%
+        );
+        opacity: 0.5;
+      }
+
+      .docs-home-bg-grain {
+        position: absolute;
+        inset: 0;
+        opacity: 0.18;
+        mix-blend-mode: soft-light;
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+        background-size: 160px 160px;
+      }
+
+      .docs-home-bg-vignette {
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(
+          ellipse 72% 65% at 50% 40%,
+          transparent 30%,
+          rgba(0, 0, 0, 0.65) 100%
+        );
+      }
+
+      .docs-home-lockup {
+        position: relative;
+        z-index: 5;
+        display: flex;
+        flex: 1 1 auto;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        min-height: 0;
+        padding: 0 0.85rem clamp(2.4rem, 7vh, 4.25rem);
+        pointer-events: none;
+      }
+
+      .docs-home-lockup h1 {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin: 0;
+      }
+
+      .docs-home-lockup-row {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: clamp(0.85rem, 5vw, 6rem);
+      }
+
+      .docs-brand-word {
+        font-size: clamp(0.83rem, 0.4rem + 3vw, 2.35rem);
+        font-weight: 500;
+        letter-spacing: clamp(0.22em, 0.18em + 0.35vw, 0.42em);
+        line-height: 1;
+        text-transform: uppercase;
+        color: #f5f8fa;
+        white-space: nowrap;
+        user-select: none;
+        will-change: transform, opacity;
+      }
+
+      .docs-brand-word--ai {
+        position: absolute;
+        left: 50%;
+        top: 100%;
+        margin-top: clamp(0.95rem, 3.5vw, 3rem);
+        transform: translateX(-50%);
+      }
+
+      .docs-home.is-revealing .docs-brand-word {
+        animation: none !important;
+      }
+
+      .docs-home.is-revealing .docs-home-sphere-spin {
+        animation-play-state: paused;
+      }
+
+      .docs-home.is-revealing .docs-home-sphere-pulse {
+        animation: none !important;
+        opacity: 0.45;
+      }
+
+      @media (prefers-reduced-motion: no-preference) {
+        .docs-home:not(.is-revealing) .docs-brand-word {
+          animation: docs-brand-glow 5.5s ease-in-out 1.2s infinite;
+        }
+      }
+
+      @keyframes docs-brand-glow {
+        0%, 100% {
+          color: #e8eef2;
+          text-shadow:
+            0 0 8px rgba(240, 247, 250, 0.12),
+            0 0 18px rgba(77, 232, 240, 0.06);
+        }
+        50% {
+          color: #ffffff;
+          text-shadow:
+            0 0 10px rgba(255, 255, 255, 0.32),
+            0 0 22px rgba(240, 247, 250, 0.22),
+            0 0 36px rgba(77, 232, 240, 0.2),
+            0 0 56px rgba(110, 240, 210, 0.12);
+        }
+      }
+
+      .docs-home-sphere {
+        position: relative;
+        z-index: 1;
+        width: clamp(5.75rem, min(26vw, 32vh), 16.5rem);
+        height: clamp(5.75rem, min(26vw, 32vh), 16.5rem);
+        flex-shrink: 0;
+        transform-origin: center center;
+        will-change: transform, opacity, filter;
+      }
+
+      .docs-home-sphere-spin {
+        position: absolute;
+        inset: 5%;
+        z-index: 1;
+      }
+
+      @media (prefers-reduced-motion: no-preference) {
+        .docs-home-sphere-spin {
+          animation: docs-sphere-spin 26s linear infinite;
+        }
+      }
+
+      @keyframes docs-sphere-spin {
+        to { transform: rotate(360deg); }
+      }
+
+      .docs-home-sphere-spin img,
+      .docs-home-sphere > img {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        user-select: none;
+        pointer-events: none;
+        display: block;
+      }
+
+      .docs-home-sphere-logo {
+        z-index: 1;
+      }
+
+      .docs-home-sphere-pulse {
+        z-index: 2;
+        mix-blend-mode: screen;
+        opacity: 0.55;
+      }
+
+      @media (prefers-reduced-motion: no-preference) {
+        .docs-home-sphere-pulse {
+          animation: docs-pulse 2.35s ease-in-out infinite;
+        }
+      }
+
+      @keyframes docs-pulse {
+        0%, 100% { opacity: 0.25; }
+        38% { opacity: 1; }
+        58% { opacity: 0.95; }
+        74% { opacity: 0.3; }
+      }
+
+      .docs-home-chrome {
+        position: relative;
+        z-index: 6;
+        flex: 0 0 auto;
+        width: 100%;
+        max-width: 36rem;
+        margin-top: 0.15rem;
+        padding-bottom: 0.25rem;
+        will-change: transform, opacity;
+      }
+
+      .docs-home-tagline {
+        margin: 0 auto;
+        max-width: 34rem;
+        font-size: clamp(0.95rem, 1.6vw, 1.05rem);
+        line-height: 1.6;
+        color: var(--fg-muted);
+        text-wrap: balance;
+      }
+
+      .docs-home-cta {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: center;
+        gap: 0.75rem;
+        margin-top: 1.25rem;
+      }
+
+      .docs-home-cta .btn {
+        min-width: 9.5rem;
+        height: 3rem;
+        padding: 0 1.5rem;
+        border-radius: 9999px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        letter-spacing: 0.02em;
+        text-transform: none;
+        justify-content: center;
+      }
+
+      .docs-home-cta .btn--solid {
+        border-color: transparent;
+        color: #041016;
+        background: linear-gradient(135deg, #4de8f0 0%, #5ff5c8 100%);
+        box-shadow:
+          0 0 0 1px rgba(255, 255, 255, 0.08) inset,
+          0 0 32px rgba(77, 232, 240, 0.25);
+      }
+
+      .docs-home-cta .btn--solid:hover {
+        color: #041016;
+        box-shadow:
+          0 0 0 1px rgba(255, 255, 255, 0.12) inset,
+          0 0 48px rgba(77, 232, 240, 0.4);
+        transform: translateY(-1px);
+      }
+
+      .docs-home-cta .btn--ghost {
+        background: transparent;
+        border-color: rgba(77, 232, 240, 0.28);
+        color: var(--fg);
+      }
+
+      .docs-home-cta .btn--ghost:hover {
+        border-color: rgba(77, 232, 240, 0.5);
+        background: rgba(77, 232, 240, 0.05);
+        box-shadow: 0 0 24px rgba(77, 232, 240, 0.1);
+      }
+
+      .docs-home-cue {
+        margin-top: 1.1rem;
+        font-size: 0.68rem;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--fg-subtle);
+        opacity: 0.75;
+      }
+
+      .docs-home-cue span {
+        display: inline-block;
+        animation: bob 1.8s ease-in-out infinite;
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        padding: 0.7rem 1.15rem;
+        font-size: 0.82rem;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        border: 1px solid var(--border-strong);
+        color: var(--fg);
+        background: rgba(77, 232, 240, 0.08);
+        transition: background 0.15s, border-color 0.15s, box-shadow 0.15s, transform 0.2s;
+        cursor: pointer;
+      }
+      .btn:hover {
+        background: rgba(77, 232, 240, 0.16);
+        border-color: var(--cyan);
+        box-shadow: 0 0 24px rgba(77, 232, 240, 0.2);
+        color: var(--fg);
+      }
+      .btn--solid {
+        border-color: transparent;
+        color: #021014;
+        background: var(--gradient-accent);
+      }
+      .btn--solid:hover {
+        color: #021014;
+        box-shadow: 0 0 32px var(--glow-cyan);
+      }
+
+      .hint {
+        position: absolute;
+        left: 50%;
+        bottom: 1.25rem;
+        transform: translateX(-50%);
+        z-index: 4;
+        font-size: 0.68rem;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--fg-subtle);
+        opacity: 0.75;
+        pointer-events: none;
+        transition: opacity 0.4s;
+      }
+      .hint span {
+        display: inline-block;
+        animation: bob 1.8s ease-in-out infinite;
+      }
+      @keyframes bob {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(4px); }
+      }
+      .hint.is-hidden { opacity: 0; }
+
+      .progress {
+        position: absolute;
+        right: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 4;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.625rem;
+        pointer-events: none;
+      }
+      @media (min-width: 768px) {
+        .progress {
+          right: 1.5rem;
+        }
+      }
+      .progress button {
+        pointer-events: auto;
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 0.75rem;
+        height: 0.75rem;
+        padding: 0;
+        border: none;
+        border-radius: 0;
+        background: transparent;
+        cursor: pointer;
+      }
+      .progress button::after {
+        content: "";
+        display: block;
+        width: 0.375rem;
+        height: 0.375rem;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.25);
+        transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+      }
+      .progress button:hover::after {
+        background: rgba(255, 255, 255, 0.5);
+      }
+      .progress button.is-active::after {
+        background: var(--cyan);
+        transform: scale(1.25);
+        box-shadow: 0 0 10px var(--glow-cyan);
+      }
+
+      .label {
+        margin: 0 0 0.65rem;
+        font-size: 0.7rem;
+        font-weight: 600;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--cyan);
+      }
+      h2 {
+        margin: 0 0 0.85rem;
+        font-size: clamp(1.45rem, 3vw, 1.9rem);
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        line-height: 1.15;
+      }
+      h3 {
+        margin: 1.5rem 0 0.6rem;
+        font-size: 1.02rem;
+        font-weight: 650;
+        color: var(--cyan-soft);
+      }
+      p, li { color: var(--fg-muted); font-size: 0.92rem; }
+      p { margin: 0 0 0.9rem; }
+      ul, ol { margin: 0 0 1rem; padding-left: 1.15rem; }
+      li { margin-bottom: 0.35rem; }
+      li strong { color: var(--fg); font-weight: 600; }
+      .lead { font-size: 1.02rem; color: var(--fg); font-weight: 500; }
+
+      .grid-3, .grid-2, .stat-row, .tier-grid {
+        display: grid;
+        gap: 0.75rem;
+        margin: 1.1rem 0 0.4rem;
+      }
+      .grid-3 { grid-template-columns: repeat(3, 1fr); }
+      .grid-2 { grid-template-columns: repeat(2, 1fr); }
+      .stat-row { grid-template-columns: repeat(4, 1fr); }
+      .tier-grid { grid-template-columns: repeat(4, 1fr); }
+
+      .card {
+        padding: 1rem 1.05rem;
+        border: 1px solid var(--border);
+        background: var(--bg-panel);
+        transition: border-color 0.2s, box-shadow 0.2s;
+      }
+      .card:hover {
+        border-color: var(--border-strong);
+        box-shadow: 0 0 28px rgba(77, 232, 240, 0.08);
+      }
+      .card h4 {
+        margin: 0 0 0.35rem;
+        font-size: 0.86rem;
+        font-weight: 650;
+        color: var(--fg);
+      }
+      .card p { margin: 0; font-size: 0.8rem; line-height: 1.5; }
+
+      .stat {
+        padding: 0.9rem 0.8rem;
+        border-top: 2px solid var(--cyan);
+        background: linear-gradient(180deg, rgba(77, 232, 240, 0.08), transparent);
+      }
+      .stat-label {
+        display: block;
+        font-size: 0.62rem;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--fg-subtle);
+        margin-bottom: 0.3rem;
+      }
+      .stat-value {
+        font-size: 1.25rem;
+        font-weight: 700;
+        background: var(--gradient-accent);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 0.85rem 0 1.1rem;
+        font-size: 0.82rem;
+      }
+      th, td {
+        text-align: left;
+        padding: 0.62rem 0.7rem;
+        border-bottom: 1px solid var(--border);
+        vertical-align: top;
+      }
+      th {
+        font-size: 0.66rem;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--cyan);
+        font-weight: 600;
+      }
+      td { color: var(--fg-muted); }
+      td code, p code, li code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 0.8em;
+        color: var(--mint);
+        background: rgba(95, 245, 200, 0.08);
+        padding: 0.1em 0.35em;
+        border: 1px solid rgba(95, 245, 200, 0.15);
+      }
+
+      .table-box {
+        margin: 0.85rem 0 1.1rem;
+        border: 1px solid var(--border);
+        background: rgba(0, 8, 12, 0.55);
+        box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.02) inset;
+        overflow: hidden;
+      }
+      .table-box table {
+        margin: 0;
+        min-width: 0;
+      }
+      .table-box tr:last-child td {
+        border-bottom: none;
+      }
+      pre {
+        margin: 0.9rem 0 1.1rem;
+        padding: 0.95rem 1rem;
+        overflow-x: auto;
+        border: 1px solid var(--border);
+        background: rgba(0, 8, 12, 0.85);
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 0.76rem;
+        line-height: 1.55;
+        color: var(--cyan-soft);
+      }
+
+      .flow { display: grid; gap: 0.5rem; margin: 1.1rem 0; }
+      .flow-step {
+        display: grid;
+        grid-template-columns: 2.2rem 1fr;
+        gap: 0.8rem;
+        align-items: start;
+        padding: 0.8rem 0.95rem;
+        border: 1px solid var(--border);
+        background: rgba(77, 232, 240, 0.03);
+      }
+      .flow-num {
+        width: 2.2rem;
+        height: 2.2rem;
+        display: grid;
+        place-items: center;
+        font-size: 0.74rem;
+        font-weight: 700;
+        color: #021014;
+        background: var(--gradient-accent);
+      }
+      .flow-step strong {
+        display: block;
+        color: var(--fg);
+        font-size: 0.88rem;
+        margin-bottom: 0.15rem;
+      }
+      .flow-step span { font-size: 0.8rem; color: var(--fg-muted); }
+
+      .arch {
+        display: grid;
+        gap: 0.55rem;
+        margin: 1.2rem 0;
+        padding: 1.1rem;
+        border: 1px solid var(--border-strong);
+        background:
+          linear-gradient(135deg, rgba(77, 232, 240, 0.06), rgba(95, 245, 200, 0.03)),
+          rgba(0, 0, 0, 0.4);
+      }
+      .arch-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.45rem;
+        align-items: center;
+        justify-content: center;
+      }
+      .arch-node {
+        padding: 0.5rem 0.8rem;
+        font-size: 0.72rem;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        border: 1px solid var(--border-strong);
+        color: var(--fg);
+        background: rgba(0, 0, 0, 0.55);
+      }
+      .arch-node--accent {
+        border-color: transparent;
+        color: #021014;
+        background: var(--gradient-accent);
+        box-shadow: 0 0 20px rgba(77, 232, 240, 0.25);
+      }
+      .arch-arrow { color: var(--cyan); font-size: 0.9rem; opacity: 0.8; }
+
+      .tier {
+        padding: 0.95rem 0.8rem 1rem;
+        border: 1px solid var(--border);
+        background: rgba(0, 0, 0, 0.45);
+        text-align: center;
+      }
+      .tier img {
+        width: 3.2rem;
+        height: 3.2rem;
+        object-fit: contain;
+        margin-bottom: 0.45rem;
+        filter: drop-shadow(0 0 10px rgba(77, 232, 240, 0.25));
+      }
+      .tier h4 { margin: 0 0 0.2rem; font-size: 0.9rem; }
+      .tier .hold {
+        font-size: 0.76rem;
+        font-weight: 700;
+        color: var(--mint);
+        margin-bottom: 0.4rem;
+      }
+      .tier p { font-size: 0.72rem; margin: 0; }
+
+      .callout {
+        margin: 1.1rem 0;
+        padding: 0.95rem 1.05rem;
+        border-left: 3px solid var(--mint);
+        background: rgba(95, 245, 200, 0.06);
+      }
+      .callout strong { color: var(--mint); }
+      .callout p { margin: 0; color: var(--fg); font-size: 0.88rem; }
+
+      .pill-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.4rem;
+        margin: 0.8rem 0 1rem;
+      }
+      .pill {
+        padding: 0.28rem 0.6rem;
+        font-size: 0.7rem;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        border: 1px solid var(--border);
+        color: var(--cyan-soft);
+        background: rgba(77, 232, 240, 0.05);
+      }
+
+      .doc-foot {
+        margin-top: 1.5rem;
+        padding-top: 1.25rem;
+        border-top: 1px solid var(--border);
+        font-size: 0.78rem;
+        color: var(--fg-subtle);
+      }
+      .doc-foot strong { color: var(--cyan); }
+
+      .mobile-bar,
+      .side-backdrop,
+      .nav-toggle {
+        display: none;
+      }
+
+      @media (max-width: 980px) {
+        :root {
+          --mobile-bar-h: 3.25rem;
+        }
+
+        .shell {
+          grid-template-columns: 1fr;
+          grid-template-rows: var(--mobile-bar-h) 1fr;
+        }
+
+        .mobile-bar {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 0.75rem;
+          height: var(--mobile-bar-h);
+          padding: 0 0.85rem 0 1rem;
+          border-bottom: 1px solid var(--border);
+          background: rgba(0, 0, 0, 0.78);
+          backdrop-filter: blur(14px);
+          -webkit-backdrop-filter: blur(14px);
+          z-index: 20;
+        }
+
+        .mobile-bar-brand {
+          display: flex;
+          align-items: center;
+          gap: 0.65rem;
+          min-width: 0;
+          text-decoration: none;
+          color: inherit;
+          cursor: pointer;
+        }
+
+        .mobile-bar-brand img {
+          width: 1.7rem;
+          height: 1.7rem;
+          object-fit: contain;
+          filter: drop-shadow(0 0 10px var(--glow-cyan));
+          flex-shrink: 0;
+        }
+
+        .mobile-bar-brand strong {
+          font-size: 0.68rem;
+          font-weight: 700;
+          letter-spacing: 0.12em;
+          text-transform: uppercase;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          background: var(--gradient-accent);
+          -webkit-background-clip: text;
+          background-clip: text;
+          color: transparent;
+        }
+
+        .mobile-bar-meta {
+          display: block;
+          font-size: 0.55rem;
+          letter-spacing: 0.14em;
+          text-transform: uppercase;
+          color: var(--fg-subtle);
+          margin-top: 0.12rem;
+        }
+
+        .nav-toggle {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          width: 2.4rem;
+          height: 2.4rem;
+          border: 1px solid var(--border);
+          background: rgba(77, 232, 240, 0.06);
+          color: var(--fg);
+          cursor: pointer;
+          flex-shrink: 0;
+        }
+
+        .nav-toggle:hover,
+        .nav-toggle[aria-expanded="true"] {
+          border-color: var(--border-strong);
+          background: rgba(77, 232, 240, 0.12);
+        }
+
+        .nav-toggle-bars {
+          display: block;
+          width: 1rem;
+          height: 0.75rem;
+          position: relative;
+        }
+
+        .nav-toggle-bars::before,
+        .nav-toggle-bars::after,
+        .nav-toggle-bars span {
+          position: absolute;
+          left: 0;
+          right: 0;
+          height: 1.5px;
+          background: var(--cyan-soft);
+          transition: transform 0.25s var(--ease), opacity 0.2s;
+        }
+
+        .nav-toggle-bars::before,
+        .nav-toggle-bars::after {
+          content: "";
+        }
+
+        .nav-toggle-bars span { top: 50%; transform: translateY(-50%); }
+        .nav-toggle-bars::before { top: 0; }
+        .nav-toggle-bars::after { bottom: 0; }
+
+        .nav-toggle[aria-expanded="true"] .nav-toggle-bars span {
+          opacity: 0;
+        }
+        .nav-toggle[aria-expanded="true"] .nav-toggle-bars::before {
+          top: 50%;
+          transform: translateY(-50%) rotate(45deg);
+        }
+        .nav-toggle[aria-expanded="true"] .nav-toggle-bars::after {
+          bottom: 50%;
+          transform: translateY(50%) rotate(-45deg);
+        }
+
+        .side-backdrop {
+          display: block;
+          position: fixed;
+          inset: 0;
+          z-index: 30;
+          border: 0;
+          padding: 0;
+          margin: 0;
+          background: rgba(0, 0, 0, 0.55);
+          opacity: 0;
+          pointer-events: none;
+          transition: opacity 0.28s var(--ease);
+        }
+
+        body.nav-open .side-backdrop {
+          opacity: 1;
+          pointer-events: auto;
+        }
+
+        .side {
+          position: fixed;
+          top: 0;
+          left: 0;
+          bottom: 0;
+          width: min(18.5rem, 86vw);
+          height: 100dvh;
+          max-height: none;
+          z-index: 40;
+          padding: 1.15rem 1rem 1.5rem;
+          border-right: 1px solid var(--border);
+          border-bottom: none;
+          background: rgba(2, 8, 12, 0.96);
+          backdrop-filter: blur(18px);
+          -webkit-backdrop-filter: blur(18px);
+          transform: translateX(-105%);
+          transition: transform 0.32s var(--ease);
+          overflow-y: auto;
+          overscroll-behavior: contain;
+        }
+
+        body.nav-open .side {
+          transform: translateX(0);
+        }
+
+        .side-brand strong { font-size: 0.7rem; }
+        .side-kicker { margin-bottom: 1.1rem; }
+        .side nav {
+          display: flex;
+          flex-direction: column;
+          gap: 0.08rem;
+        }
+        .side nav a {
+          padding: 0.55rem 0.65rem;
+          font-size: 0.82rem;
+        }
+
+        .stage {
+          min-height: 0;
+          height: calc(100dvh - var(--mobile-bar-h));
+        }
+
+        .scene-scroll {
+          padding: 0.85rem 1rem 2.75rem;
+          padding-right: 1.85rem;
+          overflow-x: auto;
+          -webkit-overflow-scrolling: touch;
+          scroll-padding-top: 0;
+        }
+
+        .scene-scroll-inner > .label {
+          margin-top: 0;
+        }
+
+        .scene-scroll-inner > h2 {
+          scroll-margin-top: 0;
+        }
+
+        .scene--hero {
+          justify-content: stretch;
+          align-items: stretch;
+        }
+
+        .docs-home {
+          padding: 0.75rem 1rem max(1.75rem, 5vh);
+          gap: 0.2rem;
+        }
+
+        .docs-home-lockup {
+          padding: 0 0.65rem clamp(2rem, 6vh, 3.25rem);
+        }
+
+        .docs-home-sphere {
+          width: clamp(5.25rem, min(36vw, 28vh), 10.5rem);
+          height: clamp(5.25rem, min(36vw, 28vh), 10.5rem);
+        }
+
+        .docs-home-lockup-row {
+          gap: clamp(0.55rem, 4vw, 1.5rem);
+        }
+
+        .docs-home-cta {
+          flex-direction: column;
+          align-items: stretch;
+          max-width: 16rem;
+          margin-inline: auto;
+        }
+
+        .docs-home-cta .btn {
+          width: 100%;
+          min-width: 0;
+        }
+
+        .docs-home-cue {
+          margin-top: 1.25rem;
+          font-size: 0.58rem;
+        }
+
+        .progress {
+          right: 0.55rem;
+          gap: 0.38rem;
+        }
+
+        .progress button {
+          width: 0.65rem;
+          height: 0.65rem;
+        }
+
+        .progress button::after {
+          width: 0.3rem;
+          height: 0.3rem;
+        }
+
+        .hint {
+          bottom: 0.85rem;
+          font-size: 0.58rem;
+        }
+
+        .grid-3,
+        .stat-row,
+        .tier-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .scene--fit .stat-row {
+          grid-template-columns: repeat(2, 1fr);
+        }
+
+        .scene--fit .grid-3 {
+          grid-template-columns: 1fr;
+          gap: 0.45rem;
+        }
+
+        .scene--fit .scene-scroll {
+          justify-content: flex-start;
+          padding-block: 0.85rem;
+          padding-inline: 1rem;
+        }
+
+        .scene--fit .lead {
+          font-size: 0.9rem;
+          margin-bottom: 0.55rem;
+        }
+
+        .scene--fit .card {
+          padding: 0.65rem 0.75rem;
+        }
+
+        .scene--fit .card p {
+          font-size: 0.74rem;
+        }
+
+        .scene--fit .callout {
+          margin-top: 0.65rem;
+          padding: 0.7rem 0.85rem;
+        }
+
+        .scene--fit .callout p {
+          font-size: 0.8rem;
+        }
+
+        .grid-2 {
+          grid-template-columns: 1fr;
+        }
+
+        .card {
+          padding: 0.85rem 0.9rem;
+        }
+
+        table {
+          width: 100%;
+          min-width: 30rem;
+          border-collapse: collapse;
+        }
+
+        .table-box {
+          width: 100%;
+          height: auto;
+          min-height: 11rem;
+          /* Keep room below so the last rows are reachable before chapter handoff */
+          max-height: min(30rem, 52dvh);
+          overflow: auto;
+          overflow-x: auto;
+          -webkit-overflow-scrolling: touch;
+          overscroll-behavior-y: contain;
+          touch-action: pan-y;
+          border-color: var(--border-strong);
+          background:
+            linear-gradient(180deg, rgba(77, 232, 240, 0.05), transparent 28%),
+            rgba(0, 8, 12, 0.72);
+          /* Extra bottom pad so sticky header doesn't cover the last row */
+          padding-bottom: 0;
+        }
+
+        .table-box table {
+          min-width: 100%;
+          width: 100%;
+          table-layout: fixed;
+          /* Space after last row inside the scrollport */
+          margin-bottom: 0.35rem;
+        }
+
+        .table-box tbody tr:last-child td {
+          padding-bottom: 0.85rem;
+        }
+
+        .table-box th,
+        .table-box td {
+          font-size: 0.74rem;
+          padding: 0.55rem 0.6rem;
+          word-break: break-word;
+          overflow-wrap: anywhere;
+        }
+
+        .table-box th {
+          position: sticky;
+          top: 0;
+          z-index: 1;
+          background: rgba(4, 12, 16, 0.96);
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
+        }
+
+        .table-box td code {
+          display: inline;
+          white-space: normal;
+          word-break: break-all;
+          font-size: 0.68rem;
+          line-height: 1.35;
+        }
+
+        th,
+        td {
+          font-size: 0.78rem;
+        }
+
+        pre {
+          overflow-x: auto;
+          font-size: 0.72rem;
+          padding: 0.85rem;
+        }
+
+        h2 {
+          font-size: clamp(1.3rem, 6.5vw, 1.7rem);
+        }
+
+        p,
+        li {
+          font-size: 0.88rem;
+        }
+
+        .lead {
+          font-size: 0.95rem;
+        }
+      }
+
+      @media (max-width: 560px) {
+        .mobile-bar {
+          padding-inline: 0.75rem;
+        }
+
+        .scene-scroll {
+          padding: 1rem 0.85rem 2.5rem;
+          padding-right: 1.65rem;
+        }
+
+        .btn {
+          padding: 0.62rem 0.95rem;
+          font-size: 0.76rem;
+        }
+
+        .pill {
+          font-size: 0.64rem;
+        }
+
+        .stat-value {
+          font-size: 1.05rem;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .scene {
+          transition-duration: 0.01ms !important;
+          filter: none !important;
+        }
+        .hint span, .hero-scan { animation: none !important; }
+        .side, .side-backdrop, .nav-toggle-bars::before, .nav-toggle-bars::after {
+          transition: none !important;
+        }
+      }
+
+    </style>
+  </head>
+  <body>
+    <button type="button" class="side-backdrop" id="side-backdrop" aria-label="Close navigation"></button>
+    <div class="shell">
+      <header class="mobile-bar">
+        <a class="mobile-bar-brand" href="/" aria-label="Return to website">
+          <img src="/engine-logo.png" alt="" />
+          <div>
+            <strong>Trade Engine AI</strong>
+            <span class="mobile-bar-meta">Fullstack Docs</span>
+          </div>
+        </a>
+        <button
+          type="button"
+          class="nav-toggle"
+          id="nav-toggle"
+          aria-expanded="false"
+          aria-controls="docs-side"
+          aria-label="Open docs navigation"
+        >
+          <span class="nav-toggle-bars" aria-hidden="true"><span></span></span>
+        </button>
+      </header>
+
+      <aside class="side" id="docs-side">
+
+        <a class="side-brand" href="/" aria-label="Return to website">
+          <img src="/engine-logo.png" alt="" />
+          <strong>Trade Engine AI</strong>
+        </a>
+        <p class="side-kicker">Fullstack Docs</p>
+        <nav id="toc">
+          <a class="toc-website" href="/">← Website</a>
+          <a href="#top">Home</a>
+
+          <a href="#overview">Overview</a>
+          <a href="#product">Product surfaces</a>
+          <a href="#stack">Tech stack</a>
+          <a href="#architecture">Architecture</a>
+          <a href="#auth">Authentication</a>
+          <a href="#cockpit">Cockpit</a>
+          <a href="#agent">AI agent &amp; tools</a>
+          <a href="#api">API map</a>
+          <a href="#data">Database</a>
+          <a href="#tokenomics">Token &amp; tiers</a>
+          <a href="#env">Environment</a>
+          <a href="#deploy">Deploy</a>
+                </nav>
+        <p class="side-foot">
+          Let the engine trade.<br />
+          Built for speed. Tuned for conviction.
+        </p>
+      </aside>
+
+      <div class="stage" id="stage">
+
+        <header class="scene scene--hero hero is-active" id="top" data-scene="top">
+          <div class="docs-home">
+            <div class="docs-home-bg" aria-hidden="true">
+              <div class="docs-home-bg-base"></div>
+              <div class="docs-home-bg-stage"></div>
+              <div class="docs-home-bg-wash"></div>
+              <div class="docs-home-bg-dots"></div>
+              <div class="docs-home-bg-grain"></div>
+              <div class="docs-home-bg-vignette"></div>
+            </div>
+
+            <div class="docs-home-lockup" id="docs-home-lockup">
+              <h1 aria-label="Trade Engine AI">
+                <span class="docs-home-lockup-row">
+                  <span class="docs-brand-word" data-home-word>ENGINE</span>
+                  <span class="docs-home-sphere" id="docs-home-sphere" aria-hidden="true">
+                    <span class="docs-home-sphere-spin">
+                      <img class="docs-home-sphere-logo" src="/engine-logo.png" alt="" width="528" height="528" />
+                      <img class="docs-home-sphere-pulse" src="/engine-core-pulse.png" alt="" width="528" height="528" />
+                    </span>
+                  </span>
+                  <span class="docs-brand-word" data-home-word>TRADE</span>
+                </span>
+                <span class="docs-brand-word docs-brand-word--ai" data-home-word>AI</span>
+              </h1>
+            </div>
+
+            <div class="docs-home-flash" id="docs-home-flash" aria-hidden="true"></div>
+            <div class="docs-home-iris" id="docs-home-iris" aria-hidden="true"></div>
+
+            <div class="docs-home-chrome" id="docs-home-chrome">
+              <p class="docs-home-tagline">
+                An autonomous crypto trading engine. Mechanical precision meets AI
+                execution.
+              </p>
+              <div class="docs-home-cta">
+                <a class="btn btn--solid" href="#overview" data-go="overview">Enter the docs</a>
+                <a class="btn btn--ghost" href="/">Return to website</a>
+              </div>
+              <p class="docs-home-cue" id="docs-home-cue"><span>Scroll ·</span> enter the docs</p>
+            </div>
+          </div>
+        </header>
+
+        <section class="scene scene--fit" id="overview" data-scene="overview"><div class="scene-scroll"><p class="label">01 — Mission</p>
+          <h2>Overview</h2>
+          <p class="lead">
+            Next.js fullstack product: bullish marketing machine in front, serious
+            trading desk behind the login — charts, signals, radar, and an AI agent.
+          </p>
+          <div class="stat-row">
+            <div class="stat">
+              <span class="stat-label">Network</span>
+              <span class="stat-value">Solana</span>
+            </div>
+            <div class="stat">
+              <span class="stat-label">Ticker</span>
+              <span class="stat-value">$ETAI</span>
+            </div>
+            <div class="stat">
+              <span class="stat-label">Supply</span>
+              <span class="stat-value">1B</span>
+            </div>
+            <div class="stat">
+              <span class="stat-label">Tax</span>
+              <span class="stat-value">0.5%</span>
+            </div>
+          </div>
+          <div class="grid-3">
+            <article class="card">
+              <h4>Public machine</h4>
+              <p>Landing chapters sell the thesis with motion and scene snap.</p>
+            </article>
+            <article class="card">
+              <h4>Access doors</h4>
+              <p>Email, Google OAuth, and Solana wallet — one desk identity.</p>
+            </article>
+            <article class="card">
+              <h4>Neural desk</h4>
+              <p>Cockpit with charts, signals, radar, and AI tool calling.</p>
+            </article>
+          </div>
+          <div class="callout">
+            <p>
+              <strong>Thesis:</strong> Volume fuels tax → treasury → vaults.
+              AI execution compounds edge for $ETAI alignment.
+            </p>
+          </div></div></section>
+
+        <section class="scene" id="product" data-scene="product"><div class="scene-scroll"><p class="label">02 — Surfaces</p>
+          <h2>Product surfaces</h2>
+          <div class="grid-3">
+            <article class="card">
+              <h4>Landing — <code>/</code></h4>
+              <p>
+                Full-viewport chapter experience: Home, About, Systems, Features,
+                Tiers, Tokenomics, End. Motion-first. Brand-first. No scroll
+                spam — scene snap.
+              </p>
+            </article>
+            <article class="card">
+              <h4>Auth — <code>/login</code> · <code>/signup</code></h4>
+              <p>
+                Email + password, Google OAuth, and Solana wallet sign-in
+                (Phantom / Solflare / Wallet Standard). One desk, three doors.
+              </p>
+            </article>
+            <article class="card">
+              <h4>Cockpit — <code>/app</code></h4>
+              <p>
+                Authenticated trading desk: charts, signals, radar, watchlist,
+                history, and AI chat rail with tool-calling power.
+              </p>
+            </article>
+          </div>
+
+          <h3>Landing chapters</h3>
+          <div class="table-box">
+<table>
+            <thead>
+              <tr>
+                <th>Scene</th>
+                <th>ID</th>
+                <th>What it sells</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Home</td>
+                <td><code>home</code></td>
+                <td>ENGINE / sphere / TRADE AI lockup — brand as the hero</td>
+              </tr>
+              <tr>
+                <td>About</td>
+                <td><code>about</code></td>
+                <td>Terminal narrative + DEX banner — how the engine boots</td>
+              </tr>
+              <tr>
+                <td>Systems</td>
+                <td><code>features</code></td>
+                <td>Animated systems terminal — live-feel market machinery</td>
+              </tr>
+              <tr>
+                <td>Features</td>
+                <td><code>how-it-works</code></td>
+                <td>Listing radar, signals, vaults, treasury rails</td>
+              </tr>
+              <tr>
+                <td>Tiers</td>
+                <td><code>tiers</code></td>
+                <td>Hold-to-unlock: Basic → Pro → Elite → Whale</td>
+              </tr>
+              <tr>
+                <td>Tokenomics</td>
+                <td><code>tokenomics</code></td>
+                <td>$ETAI sheet — supply, tax, tier holdings</td>
+              </tr>
+              <tr>
+                <td>End</td>
+                <td><code>end</code></td>
+                <td>Close the loop — CTA + social (X)</td>
+              </tr>
+            </tbody>
+          </table>
+</div></div></section>
+
+        <section class="scene" id="stack" data-scene="stack"><div class="scene-scroll"><p class="label">03 — Stack</p>
+          <h2>Tech stack</h2>
+          <p>
+            Production-grade TypeScript fullstack. Fast to ship. Hard to fake.
+          </p>
+          <div class="pill-row">
+            <span class="pill">Next.js 15</span>
+            <span class="pill">React 19</span>
+            <span class="pill">Auth.js v5</span>
+            <span class="pill">PostgreSQL 16</span>
+            <span class="pill">Drizzle ORM</span>
+            <span class="pill">Solana</span>
+            <span class="pill">OpenRouter</span>
+            <span class="pill">Hyperliquid</span>
+            <span class="pill">twitterapi.io</span>
+            <span class="pill">Docker + nginx</span>
+          </div>
+          <div class="table-box">
+<table>
+            <thead>
+              <tr>
+                <th>Layer</th>
+                <th>Choice</th>
+                <th>Where</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Framework</td>
+                <td>Next.js App Router, Turbopack, standalone output</td>
+                <td><code>package.json</code>, <code>next.config.ts</code></td>
+              </tr>
+              <tr>
+                <td>Auth</td>
+                <td>next-auth beta + Drizzle adapter, JWT sessions</td>
+                <td><code>src/auth.ts</code>, <code>src/auth.config.ts</code></td>
+              </tr>
+              <tr>
+                <td>Database</td>
+                <td>Postgres + Drizzle Kit migrations</td>
+                <td><code>src/db/</code>, <code>drizzle/</code></td>
+              </tr>
+              <tr>
+                <td>Wallets</td>
+                <td>Solana wallet-adapter + ed25519 verify</td>
+                <td><code>src/components/auth/</code>, <code>src/lib/auth/</code></td>
+              </tr>
+              <tr>
+                <td>Charts</td>
+                <td>lightweight-charts v5</td>
+                <td><code>src/components/platform/ChartPlane.tsx</code></td>
+              </tr>
+              <tr>
+                <td>AI</td>
+                <td>OpenRouter chat + tool calling</td>
+                <td><code>src/app/api/chat/</code>, <code>src/lib/agent/</code></td>
+              </tr>
+              <tr>
+                <td>Markets</td>
+                <td>Hyperliquid market REST</td>
+                <td><code>src/lib/hyperliquid/</code></td>
+              </tr>
+              <tr>
+                <td>Social intel</td>
+                <td>twitterapi.io + curated handle list</td>
+                <td><code>src/lib/twitter/</code>, <code>src/lib/signals/</code></td>
+              </tr>
+              <tr>
+                <td>Motion / UI</td>
+                <td>Framer Motion, GSAP, custom cyan/mint CSS</td>
+                <td><code>src/app/globals.css</code></td>
+              </tr>
+              <tr>
+                <td>Deploy</td>
+                <td>Docker Compose + nginx + certbot</td>
+                <td><code>scripts/deploy.sh</code></td>
+              </tr>
+            </tbody>
+          </table>
+</div></div></section>
+
+        <section class="scene" id="architecture" data-scene="architecture"><div class="scene-scroll"><p class="label">04 — System</p>
+          <h2>Architecture</h2>
+          <p>
+            One Next.js process owns the UI and the API. Postgres holds users,
+            chats, preferences, and listing memory. External rails feed markets
+            and social heat. Nginx terminates TLS in production.
+          </p>
+          <div class="arch" aria-hidden="true">
+            <div class="arch-row">
+              <span class="arch-node">Browser</span>
+              <span class="arch-arrow">→</span>
+              <span class="arch-node">nginx :443</span>
+              <span class="arch-arrow">→</span>
+              <span class="arch-node arch-node--accent">Next.js :3000</span>
+            </div>
+            <div class="arch-row">
+              <span class="arch-node">Auth.js</span>
+              <span class="arch-node">API routes</span>
+              <span class="arch-node">Cockpit UI</span>
+              <span class="arch-node">Landing</span>
+            </div>
+            <div class="arch-row">
+              <span class="arch-arrow">↓</span>
+            </div>
+            <div class="arch-row">
+              <span class="arch-node">PostgreSQL</span>
+              <span class="arch-node">OpenRouter</span>
+              <span class="arch-node">Hyperliquid</span>
+              <span class="arch-node">twitterapi.io</span>
+            </div>
+          </div>
+          <div class="grid-2">
+            <article class="card">
+              <h4>Edge middleware</h4>
+              <p>
+                <code>src/middleware.ts</code> protects <code>/app</code> and
+                redirects logged-in users away from login/signup. Config is
+                edge-safe; full authorize lives in Node.
+              </p>
+            </article>
+            <article class="card">
+              <h4>IPv4-first DNS</h4>
+              <p>
+                <code>src/instrumentation.ts</code> prefers IPv4 so Google OIDC
+                discovery doesn’t die on broken IPv6 hosts.
+              </p>
+            </article>
+          </div></div></section>
+
+        <section class="scene" id="auth" data-scene="auth"><div class="scene-scroll"><p class="label">05 — Access</p>
+          <h2>Authentication</h2>
+          <p class="lead">Three doors. One session. Desk ready.</p>
+
+          <div class="flow">
+            <div class="flow-step">
+              <div class="flow-num">01</div>
+              <div>
+                <strong>Email / password</strong>
+                <span
+                  >Signup hashes with bcrypt (12) via
+                  <code>POST /api/auth/signup</code>, creates user + trial
+                  subscription, then credentials sign-in.</span
+                >
+              </div>
+            </div>
+            <div class="flow-step">
+              <div class="flow-num">02</div>
+              <div>
+                <strong>Google OAuth</strong>
+                <span
+                  >Enabled when <code>AUTH_GOOGLE_ID</code> /
+                  <code>AUTH_GOOGLE_SECRET</code> are set. Redirect URI:
+                  <code>/api/auth/callback/google</code>. Email linking allowed.</span
+                >
+              </div>
+            </div>
+            <div class="flow-step">
+              <div class="flow-num">03</div>
+              <div>
+                <strong>Solana wallet</strong>
+                <span
+                  >SIWS-style message + <code>signMessage</code>. Server verifies
+                  ed25519, checks domain against <code>AUTH_URL</code>, upserts
+                  <code>walletAddress</code>.</span
+                >
+              </div>
+            </div>
+          </div>
+
+          <h3>Launch trial</h3>
+          <p>
+            Full features unlock for <strong style="color: var(--fg)">7 days</strong>
+            from <code>LAUNCH_DATE</code> / <code>NEXT_PUBLIC_LAUNCH_DATE</code>.
+            After that, the product narrative gates on $ETAI holdings or
+            subscription — soft-allow remains until billing ships
+            (<code>src/lib/access.ts</code>).
+          </p></div></section>
+
+        <section class="scene" id="cockpit" data-scene="cockpit"><div class="scene-scroll"><p class="label">06 — Desk</p>
+          <h2>Cockpit</h2>
+          <p>
+            The cockpit is the money seat. Multi-pane Hyperliquid futures
+            charts, live HUD, signal heat, listing radar, watch alerts, and a
+            chat rail that can move the desk.
+          </p>
+          <div class="grid-2">
+            <article class="card">
+              <h4>Stage tabs</h4>
+              <p>Charts · Signals · Radar · Watch · History</p>
+            </article>
+            <article class="card">
+              <h4>Layouts</h4>
+              <p>1 / 2 / 4 panes — default 4: BTC · ETH · SOL · ADA @ Min15</p>
+            </article>
+            <article class="card">
+              <h4>HUD</h4>
+              <p>Mark, 24h change, funding, OI, depth, setup lines, optional liq zones</p>
+            </article>
+            <article class="card">
+              <h4>Persistence</h4>
+              <p>
+                Desk prefs via <code>/api/user/desk-preferences</code> →
+                <code>user.chartPreferences</code> JSON
+              </p>
+            </article>
+          </div>
+          <h3>Key UI modules</h3>
+          <ul>
+            <li>
+              <strong>Cockpit / ChartPlane / DeskRail / ChatRail</strong> —
+              <code>src/components/platform/</code>
+            </li>
+            <li>
+              <strong>AlertEngine</strong> — polls watchlist / alerts client-side
+            </li>
+            <li>
+              <strong>TrialBanner + UserDock</strong> — launch status and session
+            </li>
+            <li>
+              <strong>Signals / Radar / Watch / History panels</strong> —
+              moduleized desk views
+            </li>
+          </ul></div></section>
+
+        <section class="scene" id="agent" data-scene="agent"><div class="scene-scroll"><p class="label">07 — Intelligence</p>
+          <h2>AI agent &amp; tools</h2>
+          <p>
+            The chat agent is not a toy chatbot. It calls real tools against
+            Hyperliquid and X, then can act on the desk — set charts, propose setups,
+            compare panes.
+          </p>
+          <div class="table-box">
+<table>
+            <thead>
+              <tr>
+                <th>Tool</th>
+                <th>Power</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>list_or_search_symbols</code></td>
+                <td>Discover Hyperliquid market symbols</td>
+              </tr>
+              <tr>
+                <td><code>get_klines</code> / <code>get_market_snapshot</code></td>
+                <td>OHLCV + mark/funding/OI style context</td>
+              </tr>
+              <tr>
+                <td><code>get_orderbook_summary</code></td>
+                <td>Depth pressure at a glance</td>
+              </tr>
+              <tr>
+                <td><code>compute_indicators</code></td>
+                <td>Technical readouts from candle data</td>
+              </tr>
+              <tr>
+                <td><code>get_trade_signals</code> / <code>search_x</code></td>
+                <td>Curated + global X intel</td>
+              </tr>
+              <tr>
+                <td><code>get_funding_history</code> / <code>get_long_short_ratio</code></td>
+                <td>Derivatives positioning</td>
+              </tr>
+              <tr>
+                <td><code>set_chart</code> / <code>propose_setup</code> / <code>compare_panes</code></td>
+                <td>Direct desk actions from chat</td>
+              </tr>
+            </tbody>
+          </table>
+</div>
+          <p>
+            Route: <code>POST /api/chat</code> — auth required, streams responses,
+            persists threads/messages, model via <code>OPENROUTER_MODEL</code>.
+          </p></div></section>
+
+        <section class="scene" id="api" data-scene="api"><div class="scene-scroll"><p class="label">08 — Routes</p>
+          <h2>API map</h2>
+          <div class="table-box">
+          <table>
+            <thead>
+              <tr>
+                <th>Route</th>
+                <th>Role</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>/api/auth/[...nextauth]</code></td>
+                <td>Auth.js handlers</td>
+              </tr>
+              <tr>
+                <td><code>/api/auth/signup</code></td>
+                <td>Email registration</td>
+              </tr>
+              <tr>
+                <td><code>/api/chat</code></td>
+                <td>OpenRouter agent + tools</td>
+              </tr>
+              <tr>
+                <td><code>/api/chats</code>, <code>/api/chats/[id]</code></td>
+                <td>Thread CRUD</td>
+              </tr>
+              <tr>
+                <td><code>/api/market/symbols|klines|snapshot(s)|listings</code></td>
+                <td>Hyperliquid market rails</td>
+              </tr>
+              <tr>
+                <td><code>/api/signals/feed</code></td>
+                <td>Curated X signal feed</td>
+              </tr>
+              <tr>
+                <td><code>/api/user/desk-preferences</code></td>
+                <td>Desk layout / prefs</td>
+              </tr>
+              <tr>
+                <td><code>/api/dex-icon/[slug]</code></td>
+                <td>Proxied DEX icons for landing</td>
+              </tr>
+            </tbody>
+          </table>
+          </div></div></section>
+
+        <section class="scene" id="data" data-scene="data"><div class="scene-scroll"><p class="label">09 — Persistence</p>
+          <h2>Database</h2>
+          <p>Drizzle schema in <code>src/db/schema.ts</code>. Migrations under <code>drizzle/</code>.</p>
+          <div class="table-box">
+<table>
+            <thead>
+              <tr>
+                <th>Table</th>
+                <th>Purpose</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>user</code></td>
+                <td>Profile, password hash, wallet, chart preferences JSON</td>
+              </tr>
+              <tr>
+                <td><code>account</code> / <code>session</code> / <code>verificationToken</code></td>
+                <td>Auth.js adapter tables</td>
+              </tr>
+              <tr>
+                <td><code>chat</code> / <code>message</code></td>
+                <td>Agent threads and turns</td>
+              </tr>
+              <tr>
+                <td><code>subscription</code></td>
+                <td>Trial / plan / holdings qualification stubs</td>
+              </tr>
+              <tr>
+                <td><code>listing_seen</code></td>
+                <td>Radar memory — first-seen Hyperliquid symbols</td>
+              </tr>
+              <tr>
+                <td><code>tweet_cache</code></td>
+                <td>Cached tweets by handle / id</td>
+              </tr>
+            </tbody>
+          </table>
+</div></div></section>
+
+        <section class="scene" id="tokenomics" data-scene="tokenomics"><div class="scene-scroll"><p class="label">10 — $ETAI</p>
+          <h2>Token &amp; tiers</h2>
+          <p class="lead">
+            Alignment is the product. Hold more. Unlock more. Fuel the engine.
+          </p>
+
+          <div class="tier-grid">
+            <article class="tier">
+              <img src="/tier-basic.png" alt="" />
+              <h4>Basic</h4>
+              <div class="hold">Hold 0.1%</div>
+              <p>Core signals &amp; standard tools</p>
+            </article>
+            <article class="tier">
+              <img src="/tier-pro.png" alt="" />
+              <h4>Pro</h4>
+              <div class="hold">Hold 0.25%</div>
+              <p>Advanced indicators &amp; vaults</p>
+            </article>
+            <article class="tier">
+              <img src="/tier-elite.png" alt="" />
+              <h4>Elite</h4>
+              <div class="hold">Hold 0.5%</div>
+              <p>Deep analytics &amp; higher limits</p>
+            </article>
+            <article class="tier">
+              <img src="/tier-whale.png" alt="" />
+              <h4>Whale</h4>
+              <div class="hold">Hold 1%</div>
+              <p>Everything unlocked · priority</p>
+            </article>
+          </div>
+          <p>
+            Contract address: <code>coming soon on Pons Family</code>
+          </p></div></section>
+
+        <section class="scene" id="env" data-scene="env"><div class="scene-scroll"><p class="label">11 — Config</p>
+          <h2>Environment</h2>
+          <p>Copy from <code>.env.example</code>. Never commit <code>.env</code>.</p>
+          <div class="table-box">
+<table>
+            <thead>
+              <tr>
+                <th>Variable</th>
+                <th>Purpose</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>NEXT_PUBLIC_APP_URL</code></td>
+                <td>Public origin</td>
+              </tr>
+              <tr>
+                <td><code>AUTH_URL</code> / <code>AUTH_SECRET</code></td>
+                <td>Canonical auth URL + signing secret</td>
+              </tr>
+              <tr>
+                <td><code>AUTH_GOOGLE_ID</code> / <code>SECRET</code></td>
+                <td>Optional Google OAuth</td>
+              </tr>
+              <tr>
+                <td><code>DATABASE_URL</code></td>
+                <td>Postgres connection</td>
+              </tr>
+              <tr>
+                <td><code>OPENROUTER_API_KEY</code> / <code>MODEL</code></td>
+                <td>LLM access (default gpt-4o-mini)</td>
+              </tr>
+              <tr>
+                <td><code>TWITTERAPI_IO_KEY</code></td>
+                <td>X / Twitter data</td>
+              </tr>
+              <tr>
+                <td><code>LAUNCH_DATE</code></td>
+                <td>Trial window start</td>
+              </tr>
+            </tbody>
+          </table>
+</div>
+          <p>
+            In Docker, compose forces
+            <code>DATABASE_URL=postgresql://engine:engine@postgres:5432/enginetrade</code>.
+          </p></div></section>
+
+        <section class="scene" id="deploy" data-scene="deploy"><div class="scene-scroll"><p class="label">12 — Ship</p>
+          <h2>Deploy</h2>
+          <p class="lead">One script. Nginx. TLS. Containers. Live.</p>
+          <pre>chmod +x ./scripts/deploy.sh
+./scripts/deploy.sh tradeengineai.com you@email.com</pre>
+          <div class="flow">
+            <div class="flow-step">
+              <div class="flow-num">01</div>
+              <div>
+                <strong>Prereqs</strong>
+                <span>DNS A record → server IP. Ports 80/443 open.</span>
+              </div>
+            </div>
+            <div class="flow-step">
+              <div class="flow-num">02</div>
+              <div>
+                <strong>Script</strong>
+                <span
+                  >Installs Docker / nginx / certbot if needed, syncs
+                  <code>AUTH_URL</code> + app URL, writes nginx reverse proxy to
+                  <code>127.0.0.1:3000</code>.</span
+                >
+              </div>
+            </div>
+            <div class="flow-step">
+              <div class="flow-num">03</div>
+              <div>
+                <strong>Compose up</strong>
+                <span
+                  ><code>docker compose up -d --build</code> — app + Postgres.
+                  Container runs migrations then <code>node server.js</code>.</span
+                >
+              </div>
+            </div>
+            <div class="flow-step">
+              <div class="flow-num">04</div>
+              <div>
+                <strong>Certbot</strong>
+                <span>HTTPS + redirect. Fill remaining .env keys, rebuild if needed.</span>
+              </div>
+            </div>
+          </div>
+          <h3>Local fast path</h3>
+          <pre>docker compose up -d postgres
+npm run db:push
+npm run dev
+# or: ./START-WEBSITE.sh</pre>
+          <h3>Google OAuth on production</h3>
+          <ul>
+            <li>Origin: <code>https://tradeengineai.com</code></li>
+            <li>Redirect: <code>https://tradeengineai.com/api/auth/callback/google</code></li>
+          </ul>
+          <div class="doc-foot"><strong>TRADE ENGINE AI</strong> — fullstack documentation · brand
+          cyan <code>#4de8f0</code> · mint <code>#5ff5c8</code> · void black ·
+          live at <code>/docs</code></div></div></section>
+
+        
+        <div class="progress" id="progress" aria-label="Chapter progress"></div>
+        <div class="hint" id="hint"><span>Scroll ·</span> next chapter</div>
+      </div>
+    </div>
+    <script>
+
+      const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const stage = document.getElementById("stage");
+      const scenes = [...stage.querySelectorAll(":scope > .scene")];
+      const links = [...document.querySelectorAll("#toc a[href^='#']")];
+      const dotsRoot = document.getElementById("progress");
+      const hint = document.getElementById("hint");
+      const navToggle = document.getElementById("nav-toggle");
+      const sideBackdrop = document.getElementById("side-backdrop");
+      const WHEEL_THRESHOLD = 70;
+      const SCENE_MS = reduce ? 0 : 900;
+      const HOME_REVEAL_MS = reduce ? 0 : 1050;
+
+      const docsHome = document.querySelector(".docs-home");
+      const homeSphere = document.getElementById("docs-home-sphere");
+      const homeWords = [...document.querySelectorAll("[data-home-word]")];
+      const homeChrome = document.getElementById("docs-home-chrome");
+      const homeCue = document.getElementById("docs-home-cue");
+      const homeBg = document.querySelector(".docs-home-bg");
+      const homeFlash = document.getElementById("docs-home-flash");
+      const homeIris = document.getElementById("docs-home-iris");
+      let homeSceneEl =
+        scenes.find((s) => s.classList.contains("scene--hero")) || null;
+
+      /** Raw eased progress (like Framer `progress`). */
+      let homeRaw = 0;
+      /** Spring-smoothed progress (like Framer `smooth`). */
+      let homeSmooth = 0;
+      let homeVel = 0;
+      let homeRevealRaf = 0;
+      let homeAnimStart = 0;
+      let homeAnimFrom = 0;
+      let homeAnimTo = 0;
+      let homeAnimDur = 0;
+      let homeAnimDone = null;
+      let homeSpringing = false;
+      /** Invalidates home→chapter opacity watch frames after reveal ends. */
+      let homeLeaveWatchToken = 0;
+
+      function clamp01(n) {
+        return Math.min(1, Math.max(0, n));
+      }
+
+      function mapStops(t, stops, values) {
+        if (t <= stops[0]) return values[0];
+        for (let i = 1; i < stops.length; i++) {
+          if (t <= stops[i]) {
+            const u = (t - stops[i - 1]) / (stops[i] - stops[i - 1]);
+            return values[i - 1] + u * (values[i] - values[i - 1]);
+          }
+        }
+        return values[values.length - 1];
+      }
+
+      /** cubic-bezier(0.22, 1, 0.36, 1) — same ease as main site scene goTo */
+      function cubicBezierEase(t, x1, y1, x2, y2) {
+        if (t <= 0) return 0;
+        if (t >= 1) return 1;
+        let start = 0;
+        let end = 1;
+        let mid = t;
+        for (let i = 0; i < 16; i++) {
+          const x = 3 * (1 - mid) * (1 - mid) * mid * x1
+            + 3 * (1 - mid) * mid * mid * x2
+            + mid * mid * mid;
+          if (Math.abs(t - x) < 1e-5) break;
+          if (x < t) start = mid;
+          else end = mid;
+          mid = (start + end) / 2;
+        }
+        const mt = 1 - mid;
+        return 3 * mt * mt * mid * y1 + 3 * mt * mid * mid * y2 + mid * mid * mid;
+      }
+
+      function sceneEase(u) {
+        return cubicBezierEase(u, 0.22, 1, 0.36, 1);
+      }
+
+      /** Match main-site homeT transform curves exactly. */
+      function applyHomeReveal(t) {
+        const p = clamp01(t);
+
+        if (homeSphere) {
+          const scale = mapStops(p, [0, 0.55, 0.92], [1, 1.55, 2.4]);
+          const y = mapStops(p, [0, 0.9], [0, -40]);
+          const opacity = mapStops(p, [0, 0.45, 0.78], [1, 1, 0]);
+          const blur = mapStops(p, [0.4, 0.85], [0, 16]);
+          homeSphere.style.transform = `translate3d(0, ${y}px, 0) scale(${scale})`;
+          homeSphere.style.opacity = String(opacity);
+          homeSphere.style.filter = blur > 0.05 ? `blur(${blur}px)` : "none";
+        }
+
+        const wordOp = mapStops(p, [0, 0.28, 0.38], [1, 1, 0]);
+        const wordY = mapStops(p, [0.28, 0.38], [0, -12]);
+        homeWords.forEach((el) => {
+          const isAi = el.classList.contains("docs-brand-word--ai");
+          el.style.opacity = String(wordOp);
+          el.style.transform = isAi
+            ? `translate3d(-50%, ${wordY}px, 0)`
+            : `translate3d(0, ${wordY}px, 0)`;
+        });
+
+        if (homeChrome) {
+          const op = mapStops(p, [0, 0.18, 0.38], [1, 1, 0]);
+          const y = mapStops(p, [0, 0.4], [0, -20]);
+          homeChrome.style.opacity = String(op);
+          homeChrome.style.transform = `translate3d(0, ${y}px, 0)`;
+          homeChrome.style.pointerEvents = p < 0.35 ? "auto" : "none";
+        }
+
+        if (homeCue) {
+          homeCue.style.opacity = String(mapStops(p, [0, 0.12, 0.28], [0.75, 0.75, 0]));
+        }
+
+        if (homeBg) {
+          homeBg.style.opacity = String(mapStops(p, [0, 0.45, 0.85], [1, 0.5, 0]));
+        }
+
+        if (homeFlash) {
+          homeFlash.style.opacity = String(
+            mapStops(p, [0.35, 0.52, 0.72, 0.9], [0, 0.55, 0.2, 0]),
+          );
+        }
+
+        if (homeIris) {
+          // Open then fully clear — don't leave a dark veil over Overview
+          const iris = mapStops(p, [0.4, 0.7, 0.92], [0, 1, 1]);
+          const irisOp = mapStops(p, [0.4, 0.55, 0.78, 0.95], [0, 0.55, 0.2, 0]);
+          homeIris.style.opacity = String(irisOp);
+          homeIris.style.background =
+            `radial-gradient(circle at 50% 48%, transparent ${iris * 72}%, rgba(0,0,0,0.45) ${iris * 72 + 8}%, rgba(0,0,0,0.82) 100%)`;
+        }
+
+        // Fade the whole home layer out so Overview isn't left darkened underneath
+        if (homeSceneEl) {
+          homeSceneEl.style.opacity = String(mapStops(p, [0.62, 0.9], [1, 0]));
+        }
+
+        docsHome?.classList.toggle("is-revealing", p > 0.02 && p < 0.985);
+      }
+
+      function clearHomeInline() {
+        if (homeSphere) {
+          homeSphere.style.transform = "";
+          homeSphere.style.opacity = "";
+          homeSphere.style.filter = "";
+        }
+        homeWords.forEach((el) => {
+          el.style.opacity = "";
+          el.style.transform = "";
+        });
+        if (homeChrome) {
+          homeChrome.style.opacity = "";
+          homeChrome.style.transform = "";
+          homeChrome.style.pointerEvents = "";
+        }
+        if (homeCue) homeCue.style.opacity = "";
+        if (homeBg) homeBg.style.opacity = "";
+        if (homeFlash) homeFlash.style.opacity = "";
+        if (homeIris) {
+          homeIris.style.opacity = "";
+          homeIris.style.background = "";
+        }
+        if (homeSceneEl) {
+          homeSceneEl.style.opacity = "";
+          homeSceneEl.style.filter = "";
+          homeSceneEl.style.transform = "";
+        }
+        docsHome?.classList.remove("is-revealing");
+      }
+
+      function stopHomeRevealAnim() {
+        if (homeRevealRaf) {
+          cancelAnimationFrame(homeRevealRaf);
+          homeRevealRaf = 0;
+        }
+        homeSpringing = false;
+        homeAnimDone = null;
+      }
+
+      /**
+       * Drive homeRaw with site ease, then spring-smooth → apply (matches
+       * Framer progress + useSpring stiffness 80 / damping 24 / mass 0.4).
+       */
+      function tickHomeReveal(now) {
+        const dt = Math.min(0.032, (now - (tickHomeReveal._last || now)) / 1000) || 0.016;
+        tickHomeReveal._last = now;
+
+        if (homeAnimDur > 0) {
+          const u = clamp01((now - homeAnimStart) / homeAnimDur);
+          homeRaw = homeAnimFrom + (homeAnimTo - homeAnimFrom) * sceneEase(u);
+          if (u >= 1) {
+            homeRaw = homeAnimTo;
+            homeAnimDur = 0;
+          }
+        }
+
+        // Spring toward homeRaw
+        const stiffness = 80;
+        const damping = 24;
+        const mass = 0.4;
+        const force = -stiffness * (homeSmooth - homeRaw) - damping * homeVel;
+        homeVel += (force / mass) * dt;
+        homeSmooth += homeVel * dt;
+
+        applyHomeReveal(homeSmooth);
+
+        const settled =
+          homeAnimDur <= 0 &&
+          Math.abs(homeSmooth - homeRaw) < 0.002 &&
+          Math.abs(homeVel) < 0.02;
+
+        if (settled) {
+          homeSmooth = homeRaw;
+          homeVel = 0;
+          applyHomeReveal(homeSmooth);
+          homeRevealRaf = 0;
+          homeSpringing = false;
+          const done = homeAnimDone;
+          homeAnimDone = null;
+          done?.();
+          return;
+        }
+
+        homeRevealRaf = requestAnimationFrame(tickHomeReveal);
+      }
+
+      function animateHomeReveal(from, to, duration, onDone) {
+        stopHomeRevealAnim();
+        homeRaw = from;
+        homeSmooth = from;
+        homeVel = 0;
+        applyHomeReveal(from);
+
+        if (reduce || duration <= 0) {
+          homeRaw = to;
+          homeSmooth = to;
+          applyHomeReveal(to);
+          onDone?.();
+          return;
+        }
+
+        homeAnimFrom = from;
+        homeAnimTo = to;
+        homeAnimDur = duration;
+        homeAnimStart = performance.now();
+        homeAnimDone = onDone;
+        homeSpringing = true;
+        tickHomeReveal._last = homeAnimStart;
+        homeRevealRaf = requestAnimationFrame(tickHomeReveal);
+      }
+
+      function resetHomeReveal() {
+        stopHomeRevealAnim();
+        homeRaw = 0;
+        homeSmooth = 0;
+        homeVel = 0;
+        clearHomeInline();
+      }
+
+      function setNavOpen(open) {
+        document.body.classList.toggle("nav-open", open);
+        if (navToggle) {
+          navToggle.setAttribute("aria-expanded", open ? "true" : "false");
+          navToggle.setAttribute(
+            "aria-label",
+            open ? "Close docs navigation" : "Open docs navigation",
+          );
+        }
+      }
+
+      function closeNav() {
+        setNavOpen(false);
+      }
+
+      navToggle?.addEventListener("click", () => {
+        setNavOpen(!document.body.classList.contains("nav-open"));
+      });
+      sideBackdrop?.addEventListener("click", closeNav);
+      window.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") closeNav();
+      });
+
+      let index = Math.max(0, scenes.findIndex((s) => s.classList.contains("is-active")));
+      if (index < 0) index = 0;
+      let animating = false;
+      let wheelAcc = 0;
+      let touchY = null;
+      let lockUntil = 0;
+      /** After a chapter snap, ignore residual swipe momentum on the new scene. */
+      let gestureConsumed = false;
+
+      scenes.forEach((s, i) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.setAttribute("aria-label", "Go to " + (s.dataset.scene || "scene " + (i + 1)));
+        btn.addEventListener("click", () => goTo(i));
+        dotsRoot.appendChild(btn);
+      });
+      const dots = [...dotsRoot.querySelectorAll("button")];
+
+      function scrollEl(scene) {
+        if (scene.classList.contains("scene--hero")) return null;
+        return scene.querySelector(".scene-scroll");
+      }
+
+      /** Wrap chapter content so short pages vertically center; tall pages still scroll. */
+      function wrapSceneScrolls() {
+        scenes.forEach((scene) => {
+          if (scene.classList.contains("scene--hero")) return;
+          const sc = scrollEl(scene);
+          if (!sc || sc.querySelector(":scope > .scene-scroll-inner")) return;
+          const inner = document.createElement("div");
+          inner.className = "scene-scroll-inner";
+          while (sc.firstChild) inner.appendChild(sc.firstChild);
+          sc.appendChild(inner);
+        });
+      }
+      wrapSceneScrolls();
+
+      function isMobileDocs() {
+        return window.matchMedia("(max-width: 980px)").matches;
+      }
+
+      function pinSceneToTitle(scene) {
+        if (!scene) return;
+        const sc = scrollEl(scene);
+        if (!sc) return;
+        sc.scrollTop = 0;
+        try {
+          sc.scrollTo({ top: 0, left: 0, behavior: "instant" });
+        } catch (_) {
+          sc.scrollTop = 0;
+        }
+        sc.querySelectorAll(".table-box").forEach((box) => {
+          box.scrollTop = 0;
+        });
+        const anchor = sc.querySelector(".label") || sc.querySelector("h2");
+        if (anchor) {
+          const top = anchor.offsetTop;
+          if (top > 0 && top < 48) sc.scrollTop = 0;
+        }
+      }
+
+      function isVerticallyScrollable(el) {
+        if (!(el instanceof Element)) return false;
+        const style = getComputedStyle(el);
+        const oy = style.overflowY;
+        if (oy !== "auto" && oy !== "scroll" && oy !== "overlay") return false;
+        return el.scrollHeight > el.clientHeight + 1;
+      }
+
+      /** Innermost scroll pane under the pointer (table-box, etc.) — not the chapter. */
+      function nestedScrollEl(target) {
+        let el = target instanceof Element ? target : null;
+        while (el && el !== stage) {
+          if (el.classList?.contains("scene-scroll")) return null;
+          if (isVerticallyScrollable(el)) return el;
+          el = el.parentElement;
+        }
+        return null;
+      }
+
+      function elCanScroll(el, dir) {
+        if (!el) return false;
+        const max = Math.max(0, el.scrollHeight - el.clientHeight);
+        if (max <= 1) return false;
+        if (dir > 0) return el.scrollTop < max - 1;
+        return el.scrollTop > 1;
+      }
+
+      function scrollNestedBy(el, delta) {
+        if (!el) return false;
+        const max = Math.max(0, el.scrollHeight - el.clientHeight);
+        if (max <= 1) return false;
+        const before = el.scrollTop;
+        const next = Math.max(0, Math.min(max, before + delta));
+        el.scrollTop = next;
+        // Keep ownership until we actually land on the edge
+        if (delta > 0) return next < max - 0.5;
+        return next > 0.5;
+      }
+
+      function nestedCanScroll(target, dir) {
+        return elCanScroll(nestedScrollEl(target), dir);
+      }
+
+      function atScrollEdge(scene, dir) {
+        const el = scrollEl(scene);
+        if (!el) return true;
+        const max = Math.max(0, el.scrollHeight - el.clientHeight);
+        if (max <= 4) return true;
+        if (dir > 0) return el.scrollTop >= max - 1;
+        return el.scrollTop <= 1;
+      }
+
+      function syncUI() {
+        const id = scenes[index]?.dataset.scene;
+        links.forEach((a) => {
+          a.classList.toggle("is-active", a.getAttribute("href") === "#" + id);
+        });
+        dots.forEach((d, i) => d.classList.toggle("is-active", i === index));
+        hint?.classList.toggle("is-hidden", index >= scenes.length - 1);
+        const hash = "#" + (id || "top");
+        if (location.hash !== hash) history.replaceState(null, "", hash);
+      }
+
+      function goTo(next, dirHint) {
+        if (next < 0 || next >= scenes.length || next === index || animating) return;
+        const prev = index;
+        const dir = dirHint ?? (next > prev ? 1 : -1);
+        animating = true;
+        wheelAcc = 0;
+        touchY = null;
+        gestureConsumed = true;
+        stopHomeRevealAnim();
+
+        const from = scenes[prev];
+        const to = scenes[next];
+        const mobile = isMobileDocs();
+        const leavingHome = prev === 0 && next > 0;
+        const enteringHome = next === 0 && prev > 0;
+        const revealMs = HOME_REVEAL_MS;
+
+        // ── Home logo reveal — discrete snap + spring, like main website ──
+        if (leavingHome) {
+          from.classList.add("is-active");
+          from.style.zIndex = "5";
+          from.style.pointerEvents = "none";
+          to.classList.remove(
+            "is-exit-up",
+            "is-exit-down",
+            "is-enter-from-up",
+            "is-enter-from-down",
+          );
+          to.classList.add("is-active");
+          to.style.zIndex = "2";
+          to.style.opacity = "0";
+          to.style.filter = "none";
+          to.style.transform = "none";
+          to.style.visibility = "visible";
+          pinSceneToTitle(to);
+
+          index = next;
+          syncUI();
+
+          const leaveTo = to;
+          const leaveFrom = from;
+          // Token so a late watch frame cannot zero Overview after reveal ends
+          const leaveToken = ++homeLeaveWatchToken;
+          let leaveWatchRaf = 0;
+          const watchLeave = () => {
+            if (leaveToken !== homeLeaveWatchToken) return;
+            leaveTo.style.opacity = String(
+              mapStops(homeSmooth, [0, 0.4, 0.75], [0, 0.65, 1]),
+            );
+            leaveWatchRaf = requestAnimationFrame(watchLeave);
+          };
+          leaveWatchRaf = requestAnimationFrame(watchLeave);
+
+          animateHomeReveal(0, 1, revealMs, () => {
+            homeLeaveWatchToken += 1;
+            if (leaveWatchRaf) cancelAnimationFrame(leaveWatchRaf);
+
+            // Hard-cut home off — avoid delayed visibility/opacity CSS leave glitch
+            leaveFrom.classList.remove(
+              "is-active",
+              "is-exit-up",
+              "is-exit-down",
+              "is-enter-from-up",
+              "is-enter-from-down",
+            );
+            leaveFrom.style.transition = "none";
+            leaveFrom.style.opacity = "0";
+            leaveFrom.style.visibility = "hidden";
+            leaveFrom.style.pointerEvents = "none";
+            leaveFrom.style.zIndex = "";
+            leaveFrom.style.filter = "none";
+            leaveFrom.style.transform = "none";
+
+            leaveTo.style.transition = "none";
+            leaveTo.style.opacity = "1";
+            leaveTo.style.filter = "none";
+            leaveTo.style.transform = "none";
+            leaveTo.style.visibility = "visible";
+            leaveTo.style.zIndex = "";
+            leaveTo.style.pointerEvents = "auto";
+            leaveTo.classList.add("is-active");
+
+            const leaveScroll = scrollEl(leaveTo);
+            if (leaveScroll) {
+              leaveScroll.style.overflowY = "";
+              leaveScroll.scrollTop = 0;
+            }
+
+            resetHomeReveal();
+
+            // Re-assert Overview after reset — homeSmooth=0 must not fade it out
+            leaveTo.style.opacity = "1";
+            leaveTo.style.visibility = "visible";
+            leaveTo.classList.add("is-active");
+            requestAnimationFrame(() => {
+              leaveTo.style.transition = "";
+              leaveTo.style.opacity = "1";
+            });
+
+            animating = false;
+            gestureConsumed = false;
+            lockUntil = performance.now() + (mobile ? 160 : 80);
+            pinSceneToTitle(leaveTo);
+            requestAnimationFrame(() => pinSceneToTitle(leaveTo));
+          });
+          return;
+        }
+
+        if (enteringHome) {
+          from.classList.remove("is-active", "is-exit-up", "is-exit-down");
+          from.style.opacity = "";
+          from.style.visibility = "";
+          from.style.filter = "";
+          from.style.transform = "";
+          from.style.pointerEvents = "";
+          // Restore home scene for reverse reveal
+          to.style.transition = "none";
+          to.style.opacity = "1";
+          to.style.visibility = "visible";
+          to.style.filter = "none";
+          to.style.transform = "none";
+          to.style.zIndex = "5";
+          to.style.pointerEvents = "none";
+          to.classList.add("is-active");
+          void to.offsetWidth;
+          to.style.transition = "";
+
+          applyHomeReveal(1);
+          homeRaw = 1;
+          homeSmooth = 1;
+          index = next;
+          syncUI();
+
+          animateHomeReveal(1, 0, revealMs, () => {
+            to.style.zIndex = "";
+            to.style.pointerEvents = "";
+            to.style.opacity = "";
+            to.style.visibility = "";
+            to.style.filter = "";
+            to.style.transform = "";
+            resetHomeReveal();
+            animating = false;
+            gestureConsumed = false;
+            lockUntil = performance.now() + 160;
+          });
+          return;
+        }
+
+        from.classList.remove("is-active", "is-enter-from-up", "is-enter-from-down");
+        from.style.opacity = "";
+        from.style.visibility = "";
+        from.style.filter = "";
+        from.style.transform = "";
+        from.style.pointerEvents = "";
+        from.style.zIndex = "";
+        from.classList.add(dir > 0 ? "is-exit-up" : "is-exit-down");
+
+        to.classList.remove("is-exit-up", "is-exit-down", "is-active");
+        to.style.opacity = "";
+        to.style.visibility = "";
+        to.style.filter = "";
+        to.style.transform = "";
+        to.style.pointerEvents = "";
+        to.style.zIndex = "";
+        to.classList.add(dir > 0 ? "is-enter-from-down" : "is-enter-from-up");
+        void to.offsetWidth;
+
+        const pinTop = mobile || dir > 0;
+        const toScroll = scrollEl(to);
+        if (pinTop) pinSceneToTitle(to);
+        else if (toScroll) toScroll.scrollTop = toScroll.scrollHeight;
+
+        if (pinTop && toScroll) {
+          toScroll.style.overflowY = "hidden";
+        }
+
+        let unlockScrollPin = null;
+        if (pinTop && toScroll) {
+          const keepTop = () => {
+            if (toScroll.scrollTop !== 0) toScroll.scrollTop = 0;
+          };
+          toScroll.addEventListener("scroll", keepTop, { passive: true });
+          unlockScrollPin = () => {
+            toScroll.removeEventListener("scroll", keepTop);
+            toScroll.style.overflowY = "";
+          };
+        }
+
+        requestAnimationFrame(() => {
+          to.classList.add("is-active");
+          to.classList.remove("is-enter-from-up", "is-enter-from-down");
+          if (pinTop) pinSceneToTitle(to);
+          requestAnimationFrame(() => {
+            if (pinTop) pinSceneToTitle(to);
+          });
+        });
+
+        index = next;
+        if (next === 0) resetHomeReveal();
+        syncUI();
+
+        window.setTimeout(() => {
+          from.classList.remove("is-exit-up", "is-exit-down");
+          unlockScrollPin?.();
+          if (pinTop) pinSceneToTitle(to);
+          animating = false;
+          gestureConsumed = false;
+          lockUntil = performance.now() + (mobile ? 320 : 140);
+          if (pinTop) {
+            window.setTimeout(() => pinSceneToTitle(to), 40);
+            window.setTimeout(() => pinSceneToTitle(to), 180);
+          }
+        }, SCENE_MS);
+      }
+
+      function step(dir) {
+        if (animating || performance.now() < lockUntil) return;
+        const cur = scenes[index];
+        if (!atScrollEdge(cur, dir)) return;
+        goTo(index + dir, dir);
+      }
+
+      function onWheel(e) {
+        const cur = scenes[index];
+        const sc = scrollEl(cur);
+        const dir = e.deltaY > 0 ? 1 : -1;
+
+        if (animating || performance.now() < lockUntil) {
+          e.preventDefault();
+          wheelAcc = 0;
+          return;
+        }
+
+        if (gestureConsumed) {
+          e.preventDefault();
+          wheelAcc = 0;
+          return;
+        }
+
+        // Home: discrete 1-gesture snap (same as main website), not continuous scrub
+        if (index === 0) {
+          e.preventDefault();
+          wheelAcc += e.deltaY;
+          if (wheelAcc > WHEEL_THRESHOLD) {
+            wheelAcc = 0;
+            goTo(1, 1);
+          } else if (wheelAcc < -WHEEL_THRESHOLD) {
+            wheelAcc = 0;
+          }
+          return;
+        }
+
+        const nested = nestedScrollEl(e.target);
+        // Scroll table (etc.) while it still has room — clamp to true end
+        if (nested && scrollNestedBy(nested, e.deltaY)) {
+          e.preventDefault();
+          wheelAcc = 0;
+          return;
+        }
+        if (nested) {
+          // Snap nested pane to its edge before chapter takes over
+          const max = Math.max(0, nested.scrollHeight - nested.clientHeight);
+          nested.scrollTop = e.deltaY > 0 ? max : 0;
+        }
+
+        // Table ended → keep scrolling the chapter
+        if (sc && !atScrollEdge(cur, dir)) {
+          sc.scrollTop += e.deltaY;
+          e.preventDefault();
+          wheelAcc = 0;
+          return;
+        }
+
+        e.preventDefault();
+
+        wheelAcc += e.deltaY;
+        if (Math.abs(wheelAcc) < WHEEL_THRESHOLD) return;
+        const stepDir = wheelAcc > 0 ? 1 : -1;
+        wheelAcc = 0;
+        step(stepDir);
+      }
+
+      stage.addEventListener("wheel", onWheel, { passive: false });
+
+      let pointerY = null;
+      stage.addEventListener("pointerdown", (e) => {
+        if (e.pointerType === "touch") return;
+        if (e.button !== 0) return;
+        if (e.target.closest("a, button, input, textarea, .table-box, .side")) return;
+        pointerY = e.clientY;
+      });
+      stage.addEventListener("pointermove", (e) => {
+        if (pointerY == null || e.pointerType === "touch") return;
+        if (animating || gestureConsumed || performance.now() < lockUntil) return;
+        const dy = pointerY - e.clientY;
+        if (Math.abs(dy) < 56) return;
+        pointerY = null;
+        const dir = dy > 0 ? 1 : -1;
+        if (index === 0) {
+          if (dir > 0) goTo(1, 1);
+          return;
+        }
+        const cur = scenes[index];
+        if (scrollEl(cur) && !atScrollEdge(cur, dir)) return;
+        step(dir);
+      });
+      const clearPointer = () => {
+        pointerY = null;
+      };
+      stage.addEventListener("pointerup", clearPointer);
+      stage.addEventListener("pointercancel", clearPointer);
+
+      stage.addEventListener(
+        "touchstart",
+        (e) => {
+          if (!gestureConsumed) touchY = e.touches[0].clientY;
+        },
+        { passive: true }
+      );
+      stage.addEventListener(
+        "touchmove",
+        (e) => {
+          if (animating || gestureConsumed || performance.now() < lockUntil) {
+            e.preventDefault();
+            return;
+          }
+          if (touchY == null) return;
+          const y = e.touches[0].clientY;
+          const dy = touchY - y;
+          if (Math.abs(dy) < 0.5) return;
+          const dir = dy > 0 ? 1 : -1;
+
+          if (index === 0) {
+            e.preventDefault();
+            if (Math.abs(dy) < 48) return;
+            touchY = y;
+            if (dir > 0) goTo(1, 1);
+            return;
+          }
+
+          const cur = scenes[index];
+          const sc = scrollEl(cur);
+          const nested = nestedScrollEl(e.target);
+
+          // 1) Scroll inside table until the real end (not early handoff)
+          if (nested && scrollNestedBy(nested, dy)) {
+            e.preventDefault();
+            touchY = y;
+            wheelAcc = 0;
+            return;
+          }
+          if (nested) {
+            const max = Math.max(0, nested.scrollHeight - nested.clientHeight);
+            nested.scrollTop = dy > 0 ? max : 0;
+          }
+
+          // 2) Table ended → scroll the chapter section
+          if (sc && !atScrollEdge(cur, dir)) {
+            sc.scrollTop += dy;
+            e.preventDefault();
+            touchY = y;
+            wheelAcc = 0;
+            return;
+          }
+
+          // 3) Chapter ended → snap to next/prev scene
+          if (Math.abs(dy) < 56) {
+            touchY = y;
+            return;
+          }
+          e.preventDefault();
+          touchY = y;
+          step(dir);
+        },
+        { passive: false }
+      );
+      stage.addEventListener("touchend", () => {
+        touchY = null;
+        gestureConsumed = false;
+      });
+      stage.addEventListener("touchcancel", () => {
+        touchY = null;
+        gestureConsumed = false;
+      });
+
+      window.addEventListener("keydown", (e) => {
+        if (["INPUT", "TEXTAREA"].includes(e.target.tagName)) return;
+        if (["ArrowDown", "PageDown", " ", "j"].includes(e.key)) {
+          e.preventDefault();
+          step(1);
+        } else if (["ArrowUp", "PageUp", "k"].includes(e.key)) {
+          e.preventDefault();
+          step(-1);
+        } else if (e.key === "Home") {
+          e.preventDefault();
+          goTo(0, -1);
+        } else if (e.key === "End") {
+          e.preventDefault();
+          goTo(scenes.length - 1, 1);
+        }
+      });
+
+      links.forEach((a) => {
+        a.addEventListener("click", (e) => {
+          const href = a.getAttribute("href") || "";
+          if (!href.startsWith("#")) return;
+          e.preventDefault();
+          const id = href.slice(1);
+          const i = scenes.findIndex((s) => s.dataset.scene === id);
+          closeNav();
+          if (i >= 0) goTo(i);
+        });
+      });
+
+      document.querySelectorAll("[data-go]").forEach((el) => {
+        el.addEventListener("click", (e) => {
+          e.preventDefault();
+          const id = el.getAttribute("data-go");
+          const i = scenes.findIndex((s) => s.dataset.scene === id);
+          if (i >= 0) goTo(i);
+        });
+      });
+
+      if ("scrollRestoration" in history) {
+        history.scrollRestoration = "manual";
+      }
+
+      // boot from hash
+      const boot = (location.hash || "").replace("#", "") || "top";
+      const bootIndex = Math.max(0, scenes.findIndex((s) => s.dataset.scene === boot));
+      scenes.forEach((s, i) => s.classList.toggle("is-active", i === bootIndex));
+      index = bootIndex;
+      resetHomeReveal();
+      pinSceneToTitle(scenes[index]);
+      syncUI();
+      requestAnimationFrame(() => pinSceneToTitle(scenes[index]));
+      window.setTimeout(() => pinSceneToTitle(scenes[index]), 50);
+
+    </script>
+  </body>
+</html>
